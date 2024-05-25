@@ -427,9 +427,9 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
 
     // paginate
     public Paginate<TEntity> GetListPaginate(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
-        => Sort(filter, sort, asNoTracking).ToPaginate(page, size);
+        => Sort(filter, sort, asNoTracking).ToPaginateAsync(page, size).GetAwaiter().GetResult();
     public Paginate<TEntity> GetListPaginate<TResult>(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distincby = null)
-        => (distincby is not null ? DistincBy(distincby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)).ToPaginate(page, size);
+        => (distincby is not null ? DistincBy(distincby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)).AsQueryable().ToPaginateAsync(page, size).GetAwaiter().GetResult();
     public Task<Paginate<TEntity>> GetListPaginateAsync(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
         => Sort(filter, sort, asNoTracking).ToPaginateAsync(page, size);
 
@@ -439,7 +439,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
     public TResult[] GetSelectArray<TResult>(Func<TEntity, TResult> select, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false) =>
         [.. Select(select, filter, sort, asNoTracking)];
     public Paginate<TResult> GetSelectPaginateList<TResult>(int page, int size, Func<TEntity, TResult> select, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
-        => Select(select, filter, sort, asNoTracking).ToPaginate(page, size);
+        => Select(select, filter, sort, asNoTracking).AsQueryable().ToPaginateAsync(page, size).GetAwaiter().GetResult();
 
     // get take
     public List<TEntity> GetTakeList(int count, EntitySortModel<TEntity> sort, Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
@@ -532,32 +532,32 @@ public static class UEntityPaginateExtension
     /// <param name="size">The size of each page.</param>
     /// <param name="from">The starting page index (default is 0).</param>
     /// <returns>A Paginate<T> object containing the paginated entities.</returns>
-    public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int index, int size, int from = 0)
-    {
-        try
-        {
-            int count = source.Count(); // paginate harici datanın sayısı çeker
-            var pages = (int)Math.Ceiling(count / (double)size);
+    //public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int index, int size, int from = 0)
+    //{
+    //    try
+    //    {
+    //        int count = source.Count(); // paginate harici datanın sayısı çeker
+    //        var pages = (int)Math.Ceiling(count / (double)size);
 
-            return new Paginate<T>()
-            {
-                Index = index,
-                Size = size,
-                From = from,
-                Count = count,
-                Items = [.. source.Skip((index - from) * size).Take(size)], // paginate datasını çeker
-                Pages = pages,
-                HasPrevious = (index - from) > 0,
-                HasNext = (index - from + 1) < pages
-            };
-        }
-        catch
-        {
-            Console.WriteLine($"ToPaginate() => entity type: {typeof(T)}");
+    //        return new Paginate<T>()
+    //        {
+    //            Index = index,
+    //            Size = size,
+    //            From = from,
+    //            Count = count,
+    //            Items = [.. source.Skip((index - from) * size).Take(size)], // paginate datasını çeker
+    //            Pages = pages,
+    //            HasPrevious = (index - from) > 0,
+    //            HasNext = (index - from + 1) < pages
+    //        };
+    //    }
+    //    catch
+    //    {
+    //        Console.WriteLine($"ToPaginate() => entity type: {typeof(T)}");
 
-            return new Paginate<T>();
-        }
-    }
+    //        return new Paginate<T>();
+    //    }
+    //}
 
     /// <summary>
     /// Asynchronously converts a queryable collection of entities into a paginated list.
@@ -573,10 +573,8 @@ public static class UEntityPaginateExtension
         try
         {
             int count = await source.CountAsync(); // paginate harici datanın sayısı çeker
-            var pages = (int)Math.Ceiling(count / (double)size);
-
             var items = await source.Skip((index - from) * size).Take(size).ToListAsync();  // paginate datasını çeker
-
+            var pages = (int)Math.Ceiling(count / (double)size);
             return new Paginate<T>()
             {
                 Index = index,
