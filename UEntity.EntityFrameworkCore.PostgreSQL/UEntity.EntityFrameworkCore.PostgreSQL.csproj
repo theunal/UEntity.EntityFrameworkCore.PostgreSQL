@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>Yusuf Ünal</Authors>
 		<Company>Yusuf Ünal</Company>
-		<PackageProjectUrl>https://github.com/theunal/UEntity.PostgreSQL</PackageProjectUrl>
-		<Description></Description>
+		<PackageProjectUrl>https://github.com/theunal/UEntity.EntityFrameworkCore.PostgreSQL</PackageProjectUrl>
+		<Description>This IEntityRepository interface represents a generic entity repository interface. This interface defines standard CRUD (Create, Read, Update, Delete) operations for interacting with entities in a database table and provides various methods for query operations.</Description>
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>postresql generic repository</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<Version>8.0.4.1</Version>
+		<Version>9.0.0-preview.3</Version>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>
 
@@ -28,7 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.0-preview.3" />
 	</ItemGroup>
 
 </Project>
