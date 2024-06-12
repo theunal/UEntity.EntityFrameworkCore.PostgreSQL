@@ -110,9 +110,9 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="filter">The filter expression.</param>
     /// <param name="sort">The sorting model.</param>
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
-    /// <param name="distincby">The distinct by function.</param>
+    /// <param name="distinctby">The distinct by function.</param>
     /// <returns>A list of distinct results of entities that match the filter.</returns>
-    List<T> GetAll<TResult>(Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distincby = null);
+    List<T> GetAll<TResult>(Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distinctby = null);
 
     /// <summary>
     /// Asynchronously retrieves all entities that match the specified filter, with optional sorting and tracking behavior.
@@ -139,9 +139,9 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="filter">The filter expression.</param>
     /// <param name="sort">The sorting model.</param>
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
-    /// <param name="distincby">The distinct by function.</param>
+    /// <param name="distinctby">The distinct by function.</param>
     /// <returns>An array of distinct results of entities that match the filter.</returns>
-    T[] GetArray<TResult>(Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distincby = null);
+    T[] GetArray<TResult>(Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distinctby = null);
 
     /// <summary>
     /// Asynchronously retrieves an array of entities that match the specified filter, with optional sorting and tracking behavior.
@@ -172,9 +172,9 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="filter">The filter expression.</param>
     /// <param name="sort">The sorting model.</param>
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
-    /// <param name="distincby">The distinct by function.</param>
+    /// <param name="distinctby">The distinct by function.</param>
     /// <returns>A paginated list of distinct results of entities that match the filter.</returns>
-    Paginate<T> GetListPaginate<TResult>(int page, int size, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distincby = null);
+    Paginate<T> GetListPaginate<TResult>(int page, int size, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, Func<T, TResult>? distinctby = null);
 
     /// <summary>
     /// Asynchronously retrieves a paginated list of entities that match the specified filter, with optional sorting and tracking behavior.
@@ -224,8 +224,8 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
         bool? asNoTracking = false);
 
     // select many list
-    List<TResult> GetSelectManyList<TResult>(Func<T, IEnumerable<TResult>> selectMany, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, bool? distinc = null);
-    TResult[] GetSelectManyArray<TResult>(Func<T, IEnumerable<TResult>> selectMany, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, bool? distinc = null);
+    List<TResult> GetSelectManyList<TResult>(Func<T, IEnumerable<TResult>> selectMany, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, bool? distinct = null);
+    TResult[] GetSelectManyArray<TResult>(Func<T, IEnumerable<TResult>> selectMany, Expression<Func<T, bool>>? filter = null, EntitySortModel<T>? sort = null, bool? asNoTracking = false, bool? distinct = null);
 
     /// <summary>
     /// Retrieves a list of entities that match the specified filter and takes the specified number of entities, with optional sorting and tracking behavior.
@@ -468,24 +468,24 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
 
     public List<TEntity> GetAll(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false) =>
          [.. Sort(filter, sort, asNoTracking)];
-    public List<TEntity> GetAll<TResult>(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distincby = null) =>
-        [.. distincby is not null ? DistincBy(distincby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)];
+    public List<TEntity> GetAll<TResult>(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distinctby = null) =>
+        [.. distinctby is not null ? DistincBy(distinctby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)];
     public Task<List<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, CancellationToken cancellationToken = default) =>
         Sort(filter, sort, asNoTracking).ToListAsync(cancellationToken);
 
     // get array
     public TEntity[] GetArray(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false) =>
         [.. Sort(filter, sort, asNoTracking)];
-    public TEntity[] GetArray<TResult>(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distincby = null) =>
-        [.. distincby is not null ? DistincBy(distincby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)];
+    public TEntity[] GetArray<TResult>(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distinctby = null) =>
+        [.. distinctby is not null ? DistincBy(distinctby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)];
     public Task<TEntity[]> GetArrayAsync(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, CancellationToken cancellationToken = default) =>
         Sort(filter, sort, asNoTracking).ToArrayAsync(cancellationToken);
 
     // paginate
     public Paginate<TEntity> GetListPaginate(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
         => Sort(filter, sort, asNoTracking).ToPaginateAsync(page, size).GetAwaiter().GetResult();
-    public Paginate<TEntity> GetListPaginate<TResult>(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distincby = null)
-        => (distincby is not null ? DistincBy(distincby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)).AsQueryable().ToPaginateAsync(page, size).GetAwaiter().GetResult();
+    public Paginate<TEntity> GetListPaginate<TResult>(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, Func<TEntity, TResult>? distinctby = null)
+        => (distinctby is not null ? DistincBy(distinctby, filter, sort, asNoTracking) : Sort(filter, sort, asNoTracking)).AsQueryable().ToPaginateAsync(page, size).GetAwaiter().GetResult();
     public Task<Paginate<TEntity>> GetListPaginateAsync(int page, int size, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
         => Sort(filter, sort, asNoTracking).ToPaginateAsync(page, size);
 
@@ -499,9 +499,9 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
 
     // select many
     public List<TResult> GetSelectManyList<TResult>(Func<TEntity, IEnumerable<TResult>> selectMany, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false,
-        bool? distinc = null) => [.. Sort(filter, sort, asNoTracking).SelectMany(selectMany).DistinctIf(distinc ?? false)];
+        bool? distinct = null) => [.. Sort(filter, sort, asNoTracking).SelectMany(selectMany).DistinctIf(distinct ?? false)];
     public TResult[] GetSelectManyArray<TResult>(Func<TEntity, IEnumerable<TResult>> selectMany, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false,
-        bool? distinc = null) => [.. Sort(filter, sort, asNoTracking).SelectMany(selectMany).DistinctIf(distinc ?? false)];
+        bool? distinct = null) => [.. Sort(filter, sort, asNoTracking).SelectMany(selectMany).DistinctIf(distinct ?? false)];
 
     // get take
     public List<TEntity> GetTakeList(int count, EntitySortModel<TEntity> sort, Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
