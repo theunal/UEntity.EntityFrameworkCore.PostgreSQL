@@ -621,7 +621,6 @@ public static class UEntityExtensions
             return new Paginate<T>();
         }
     }
-
     public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int index, int size, int from = 0)
     {
         try
@@ -648,11 +647,36 @@ public static class UEntityExtensions
             return new Paginate<T>();
         }
     }
-
     public static IEnumerable<T> DistinctIf<T>(this IEnumerable<T> source, bool condition)
     {
         return condition ? source.Distinct() : source;
     }
+
+    public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> query, Expression<Func<T, bool>> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        var parameter = Expression.Parameter(typeof(T));
+        var combinedBody = Expression.AndAlso(Expression.Invoke(query, parameter), Expression.Invoke(predicate, parameter));
+        return Expression.Lambda<Func<T, bool>>(combinedBody, parameter);
+    }
+
+    public static Expression<Func<T, bool>> Or<T>(this Expression<Func<T, bool>> query, Expression<Func<T, bool>> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(query);
+        ArgumentNullException.ThrowIfNull(predicate);
+
+        var parameter = Expression.Parameter(typeof(T));
+        var combinedBody = Expression.OrElse(Expression.Invoke(query, parameter), Expression.Invoke(predicate, parameter));
+        return Expression.Lambda<Func<T, bool>>(combinedBody, parameter);
+    }
+}
+
+public static class PredicateBuilder
+{
+    public static Expression<Func<T, bool>> NewQuery<T>(bool @is) => x => @is;
+    public static Expression<Func<T, bool>> NewQuery<T>(Expression<Func<T, bool>> predicate) => predicate;
 }
 
 // main entity interface
