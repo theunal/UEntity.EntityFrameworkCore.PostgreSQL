@@ -12,7 +12,7 @@
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>postresql generic repository</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<Version>9.0.3</Version>
+		<Version>9.0.4</Version>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>
 
@@ -28,7 +28,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.3" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
 	</ItemGroup>
 
 </Project>

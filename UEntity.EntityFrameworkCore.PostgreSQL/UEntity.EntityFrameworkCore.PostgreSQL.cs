@@ -595,23 +595,24 @@ public static class UEntityExtensions
     /// <param name="size">The size of each page.</param>
     /// <param name="from">The starting page index (default is 0).</param>
     /// <returns>A Task<Paginate>T>> object containing the paginated entities.</returns>
-    public static async Task<Paginate<T>> ToPaginateAsync<T>(this IQueryable<T> source, int index, int size, int from = 0)
+    public static async Task<Paginate<T>> ToPaginateAsync<T>(this IQueryable<T> source, int page, int size)
     {
+        page = page < 0 ? 0 : page;
+        size = size < 0 ? 0 : size;
         try
         {
             int count = await source.CountAsync(); // paginate harici datanın sayısı çeker
-            var items = await source.Skip((index - from) * size).Take(size).ToListAsync();  // paginate datasını çeker
+            var items = await source.Skip(page * size).Take(size).ToListAsync();  // paginate datasını çeker
             var pages = (int)Math.Ceiling(count / (double)size);
             return new Paginate<T>()
             {
-                Index = index,
+                Page = page,
                 Size = size,
-                From = from,
                 Count = count,
                 Items = items,
                 Pages = pages,
-                HasPrevious = (index - from) > 0,
-                HasNext = (index - from + 1) < pages
+                HasPrevious = page > 0,
+                HasNext = (page + 1) < pages
             };
         }
         catch
@@ -621,23 +622,24 @@ public static class UEntityExtensions
             return new Paginate<T>();
         }
     }
-    public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int index, int size, int from = 0)
+    public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int page, int size)
     {
+        page = page < 0 ? 0 : page;
+        size = size < 0 ? 0 : size;
         try
         {
             int count = source.Count();
-            var items = source.Skip((index - from) * size).Take(size).ToList();
+            var items = source.Skip(page * size).Take(size).ToList();
             var pages = (int)Math.Ceiling(count / (double)size);
             return new Paginate<T>()
             {
-                Index = index,
+                Page = page,
                 Size = size,
-                From = from,
                 Count = count,
                 Items = items,
                 Pages = pages,
-                HasPrevious = (index - from) > 0,
-                HasNext = (index - from + 1) < pages
+                HasPrevious = page > 0,
+                HasNext = (page + 1) < pages
             };
         }
         catch
@@ -688,20 +690,13 @@ public record EntitySortModel<T>
     public SortOrder SortType { get; set; } = SortOrder.Ascending;
 }
 
-public class PageRequest
+public record Paginate<T>
 {
-    public int Page { get; set; } = 0;
-    public int PageSize { get; set; } = 20;
-}
-
-public class Paginate<T>
-{
-    public int From { get; set; } = 0;
-    public int Index { get; set; } = 0;
-    public int Size { get; set; } = 0;
-    public int Count { get; set; } = 0;
-    public int Pages { get; set; } = 0;
-    public List<T> Items { get; set; } = [];
-    public bool HasPrevious { get; set; } = false;
-    public bool HasNext { get; set; } = false;
+    public int Page { get; set; }
+    public int Size { get; set; }
+    public long Count { get; set; }
+    public int Pages { get; set; }
+    public bool HasPrevious { get; set; }
+    public bool HasNext { get; set; }
+    public List<T> Items { get; set; } = null!;
 }
