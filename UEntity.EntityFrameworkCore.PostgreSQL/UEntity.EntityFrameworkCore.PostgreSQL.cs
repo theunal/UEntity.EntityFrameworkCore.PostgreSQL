@@ -1,7 +1,7 @@
-﻿using System.Linq.Expressions;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using System.Linq.Expressions;
 
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
@@ -11,8 +11,6 @@ namespace UEntity.EntityFrameworkCore.PostgreSQL;
 /// <typeparam name="T">The type of the entity.</typeparam>
 public interface IEntityRepository<T> where T : class, IEntity, new()
 {
-    DbSet<T> Entity();
-
     /// <summary>
     /// Counts the number of entities that match the specified filter.
     /// </summary>
@@ -440,8 +438,6 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
 }
 public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEntityRepository<TEntity> where TEntity : class, IEntity, new() where TContext : DbContext, new()
 {
-    public DbSet<TEntity> Entity() => context.Set<TEntity>();
-
     // count
     public int Count(Expression<Func<TEntity, bool>>? filter = null) => (filter is not null ? context.Set<TEntity>().Where(filter) : context.Set<TEntity>()).Count();
     public Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default)
@@ -597,22 +593,22 @@ public static class UEntityExtensions
     /// <returns>A Task<Paginate>T>> object containing the paginated entities.</returns>
     public static async Task<Paginate<T>> ToPaginateAsync<T>(this IQueryable<T> source, int page, int size)
     {
-        page = page < 0 ? 0 : page;
-        size = size < 0 ? 0 : size;
+        page = page < 1 ? 1 : page;
+        size = size <= 0 ? 5 : size;
         try
         {
-            int count = await source.CountAsync(); // paginate harici datanın sayısı çeker
-            var items = await source.Skip(page * size).Take(size).ToListAsync();  // paginate datasını çeker
-            var pages = (int)Math.Ceiling(count / (double)size);
+            int total_count = await source.CountAsync(); // paginate harici datanın sayısı çeker
+            var items = await source.Skip((page - 1) * size).Take(size).ToListAsync();  // paginate datasını çeker
+            var pages_count = (int)Math.Ceiling(total_count / (double)size);
             return new Paginate<T>()
             {
                 Page = page,
                 Size = size,
-                Count = count,
+                TotalCount = total_count,
                 Items = items,
-                Pages = pages,
-                HasPrevious = page > 0,
-                HasNext = (page + 1) < pages
+                PagesCount = pages_count,
+                HasPrevious = page > 1,
+                HasNext = page < pages_count
             };
         }
         catch
@@ -624,22 +620,22 @@ public static class UEntityExtensions
     }
     public static Paginate<T> ToPaginate<T>(this IEnumerable<T> source, int page, int size)
     {
-        page = page < 0 ? 0 : page;
-        size = size < 0 ? 0 : size;
+        page = page < 1 ? 1 : page;
+        size = size <= 0 ? 5 : size;
         try
         {
-            int count = source.Count();
-            var items = source.Skip(page * size).Take(size).ToList();
-            var pages = (int)Math.Ceiling(count / (double)size);
+            int total_count = source.Count();
+            var items = source.Skip((page - 1) * size).Take(size).ToList();
+            var pages_count = (int)Math.Ceiling(total_count / (double)size);
             return new Paginate<T>()
             {
                 Page = page,
                 Size = size,
-                Count = count,
+                TotalCount = total_count,
                 Items = items,
-                Pages = pages,
-                HasPrevious = page > 0,
-                HasNext = (page + 1) < pages
+                PagesCount = pages_count,
+                HasPrevious = page > 1,
+                HasNext = page < pages_count
             };
         }
         catch
@@ -673,6 +669,20 @@ public static class UEntityExtensions
         var combinedBody = Expression.OrElse(Expression.Invoke(query, parameter), Expression.Invoke(predicate, parameter));
         return Expression.Lambda<Func<T, bool>>(combinedBody, parameter);
     }
+
+    public static Paginate<TDestination> ConvertItems<TSource, TDestination>(this Paginate<TSource> source, List<TDestination> items)
+    {
+        return new Paginate<TDestination>
+        {
+            TotalCount = source.TotalCount,
+            HasNext = source.HasNext,
+            HasPrevious = source.HasPrevious,
+            Page = source.Page,
+            PagesCount = source.PagesCount,
+            Size = source.Size,
+            Items = items
+        };
+    }
 }
 
 public static class PredicateBuilder
@@ -690,12 +700,18 @@ public record EntitySortModel<T>
     public SortOrder SortType { get; set; } = SortOrder.Ascending;
 }
 
+public record PageRequest
+{
+    public int Page { get; set; }
+    public int Size { get; set; }
+}
+
 public record Paginate<T>
 {
     public int Page { get; set; }
     public int Size { get; set; }
-    public long Count { get; set; }
-    public int Pages { get; set; }
+    public long TotalCount { get; set; }
+    public long PagesCount { get; set; }
     public bool HasPrevious { get; set; }
     public bool HasNext { get; set; }
     public List<T> Items { get; set; } = null!;
