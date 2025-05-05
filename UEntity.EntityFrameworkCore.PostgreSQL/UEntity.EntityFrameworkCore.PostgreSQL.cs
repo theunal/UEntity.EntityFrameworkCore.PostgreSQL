@@ -435,6 +435,15 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="asNoTracking">Whether to track the entity or not.</param>
     /// <returns>The entity with the minimum value.</returns>
     T? MinBy<TKey>(Func<T, TKey> keyselect, Expression<Func<T, bool>>? filter = null, bool? asNoTracking = false);
+
+    /// <summary>
+    /// Returns an IQueryable of entities that match the specified filter and sorting criteria.
+    /// </summary>
+    /// <param name="filter">The filter expression.</param>
+    /// <param name="sort">The sorting criteria.</param>
+    /// <param name="asNoTracking">Whether to track the entity or not.</param>
+    /// <returns>An IQueryable of entities.</returns>
+    IQueryable<T> AsQueryable(bool? asNoTracking = false);
 }
 public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEntityRepository<TEntity> where TEntity : class, IEntity, new() where TContext : DbContext, new()
 {
@@ -561,6 +570,12 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
     public Task<TResult> MinAsync<TResult>(Expression<Func<TEntity, TResult>> filter, CancellationToken cancellationToken = default) => context.Set<TEntity>().MinAsync(filter, cancellationToken);
     public TEntity? MinBy<TResult>(Func<TEntity, TResult> keyselect, Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
         => Filter(filter, asNoTracking).MinBy(keyselect);
+
+    public IQueryable<TEntity> AsQueryable(bool? asNoTracking = false)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        return asNoTracking == true ? query.AsNoTracking() : query;
+    }
 
     private IEnumerable<TEntity> Take(int count, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
         => Sort(filter, sort, asNoTracking).Take(count);
