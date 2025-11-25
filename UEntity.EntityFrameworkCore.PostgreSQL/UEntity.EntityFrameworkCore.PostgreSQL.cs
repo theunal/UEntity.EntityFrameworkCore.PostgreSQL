@@ -311,7 +311,7 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="setPropertyCalls">The expression specifying the update.</param>
     /// <param name="filter">The filter expression.</param>
     /// <returns>The number of affected entities.</returns>
-    int ExecuteUpdate(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>>? filter = null);
+    int ExecuteUpdate(Action<UpdateSettersBuilder<T>> setPropertyCalls, Expression<Func<T, bool>>? filter = null);
 
     /// <summary>
     /// Asynchronously executes an update operation on entities that match the specified filter.
@@ -319,33 +319,34 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="setPropertyCalls">The expression specifying the update.</param>
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous update operation, containing the number of affected entities.</returns>
-    Task<int> ExecuteUpdateAsync(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
+    Task<int> ExecuteUpdateAsync(Action<UpdateSettersBuilder<T>> setPropertyCalls,
+        Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the specified entity from the repository.
     /// </summary>
     /// <param name="entity">The entity to delete.</param>
-    void Delete(T entity);
+    int Delete(T entity);
 
     /// <summary>
     /// Asynchronously deletes the specified entity from the repository.
     /// </summary>
     /// <param name="entity">The entity to delete.</param>
     /// <returns>A task that represents the asynchronous delete operation.</returns>
-    Task DeleteAsync(T entity, CancellationToken cancellationToken = default);
+    Task<int> DeleteAsync(T entity, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the specified range of entities from the repository.
     /// </summary>
     /// <param name="entities">The entities to delete.</param>
-    void DeleteRange(IEnumerable<T> entities);
+    int DeleteRange(IEnumerable<T> entities);
 
     /// <summary>
     /// Asynchronously deletes the specified range of entities from the repository.
     /// </summary>
     /// <param name="entities">The entities to delete.</param>
     /// <returns>A task that represents the asynchronous delete range operation.</returns>
-    Task DeleteRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
+    Task<int> DeleteRangeAsync(IEnumerable<T> entities, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes a delete operation on entities that match the specified filter.
@@ -456,18 +457,51 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
 public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEntityRepository<TEntity> where TEntity : class, IEntity, new() where TContext : DbContext, new()
 {
     // count
-    public int Count(Expression<Func<TEntity, bool>>? filter = null) => (filter is not null ? context.Set<TEntity>().Where(filter) : context.Set<TEntity>()).Count();
+    public int Count(Expression<Func<TEntity, bool>>? filter = null)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.AsNoTracking().Count();
+        }
+        else
+        {
+            return query.AsNoTracking().Where(filter).Count();
+        }
+    }
     public Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default)
-        => (filter is not null ? context.Set<TEntity>().Where(filter) : context.Set<TEntity>()).CountAsync(cancellationToken);
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.AsNoTracking().CountAsync(cancellationToken);
+        }
+        else
+        {
+            return query.AsNoTracking().Where(filter).CountAsync(cancellationToken);
+        }
+    }
 
     // first 
-    public TEntity? FirstOrDefault(Expression<Func<TEntity, object>> sort) => context.Set<TEntity>().OrderBy(sort).FirstOrDefault();
-    public Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, object>> sort, CancellationToken cancellationToken = default) => context.Set<TEntity>().OrderBy(sort).FirstOrDefaultAsync(cancellationToken);
+    public TEntity? FirstOrDefault(Expression<Func<TEntity, object>> sort)
+    {
+        // todo - sort - asnotracking
+        return context.Set<TEntity>().OrderBy(sort).FirstOrDefault();
+    }
+    public Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, object>> sort, CancellationToken cancellationToken = default)
+    {
+        return context.Set<TEntity>().OrderBy(sort).FirstOrDefaultAsync(cancellationToken);
+    }
 
     // last
-    public TEntity? LastOrDefault(Expression<Func<TEntity, object>> sort) => context.Set<TEntity>().OrderByDescending(sort).FirstOrDefault();
+    public TEntity? LastOrDefault(Expression<Func<TEntity, object>> sort)
+    {
+        return context.Set<TEntity>().OrderByDescending(sort).FirstOrDefault();
+    }
     public Task<TEntity?> LastOrDefaultAsync(Expression<Func<TEntity, object>> sort, CancellationToken cancellationToken = default)
-        => context.Set<TEntity>().OrderByDescending(sort).FirstOrDefaultAsync(cancellationToken);
+    {
+        return context.Set<TEntity>().OrderByDescending(sort).FirstOrDefaultAsync(cancellationToken);
+    }
 
     // get
     public TEntity? Get(Expression<Func<TEntity, bool>> filter, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false,
@@ -483,11 +517,13 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
         }
         return query.FirstOrDefault();
     }
-    public TResult? Get<TResult>(Expression<Func<TEntity, bool>> filter, Func<TEntity, TResult> select, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
+    public TResult? Get<TResult>(Expression<Func<TEntity, bool>> filter, Func<TEntity, 
+        TResult> select, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
     {
         return Select(select, filter, sort, asNoTracking).FirstOrDefault();
     }
-    public Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> filter, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, CancellationToken cancellationToken = default,
+    public Task<TEntity?> GetAsync(Expression<Func<TEntity, bool>> filter, 
+        EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false, CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -636,45 +672,132 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
     public void UpdateRange(IEnumerable<TEntity> entities) { context.UpdateRange(entities); context.SaveChanges(); }
     public Task UpdateRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) { context.UpdateRange(entities); return context.SaveChangesAsync(cancellationToken); }
 
+    // Action<UpdateSettersBuilder<TEntity>>
+
     // execute update
-    public int ExecuteUpdate(Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls, Expression<Func<TEntity, bool>>? filter = null)
-        => (filter is not null ? context.Set<TEntity>().Where(filter) : context.Set<TEntity>()).ExecuteUpdate(setPropertyCalls);
-    public Task<int> ExecuteUpdateAsync(Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls, Expression<Func<TEntity, bool>>? filter = null,
-        CancellationToken cancellationToken = default) => (filter is not null ? context.Set<TEntity>().Where(filter) : context.Set<TEntity>()).ExecuteUpdateAsync(setPropertyCalls, cancellationToken);
+    public int ExecuteUpdate(Action<UpdateSettersBuilder<TEntity>> setPropertyCalls, Expression<Func<TEntity, bool>>? filter = null)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.ExecuteUpdate(setPropertyCalls);
+        }
+        else
+        {
+            return query.Where(filter).ExecuteUpdate(setPropertyCalls);
+        }
+    }
+    public Task<int> ExecuteUpdateAsync(Action<UpdateSettersBuilder<TEntity>> setPropertyCalls, Expression<Func<TEntity, bool>>? filter = null,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
+        }
+        else
+        {
+            return query.Where(filter).ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
+        }
+    }
 
     // delete
-    public void Delete(TEntity entity) { context.Entry(entity).State = EntityState.Deleted; context.SaveChanges(); }
-    public Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default) { context.Entry(entity).State = EntityState.Deleted; return context.SaveChangesAsync(cancellationToken); }
+    public int Delete(TEntity entity)
+    {
+        context.Entry(entity).State = EntityState.Deleted;
+        return context.SaveChanges();
+    }
+    public Task<int> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+    {
+        context.Entry(entity).State = EntityState.Deleted;
+        return context.SaveChangesAsync(cancellationToken);
+    }
 
     // delete range
-    public void DeleteRange(IEnumerable<TEntity> entities) { context.RemoveRange(entities); context.SaveChanges(); }
-    public Task DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) { context.RemoveRange(entities); return context.SaveChangesAsync(cancellationToken); }
+    public int DeleteRange(IEnumerable<TEntity> entities)
+    {
+        context.RemoveRange(entities);
+        return context.SaveChanges();
+    }
+    public Task<int> DeleteRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+    {
+        context.RemoveRange(entities);
+        return context.SaveChangesAsync(cancellationToken);
+    }
 
     // execute delete
-    public int ExecuteDelete(Expression<Func<TEntity, bool>>? filter = null) => filter is not null ?
-        context.Set<TEntity>().Where(filter).ExecuteDelete() : context.Set<TEntity>().ExecuteDelete();
-    public Task<int> ExecuteDeleteAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default) => filter is not null ?
-        context.Set<TEntity>().Where(filter).ExecuteDeleteAsync(cancellationToken) : context.Set<TEntity>().ExecuteDeleteAsync(cancellationToken);
+    public int ExecuteDelete(Expression<Func<TEntity, bool>>? filter = null)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.ExecuteDelete();
+        }
+        else
+        {
+            return query.Where(filter).ExecuteDelete();
+        }
+    }
+    public Task<int> ExecuteDeleteAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default)
+    {
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (filter == null)
+        {
+            return query.ExecuteDeleteAsync(cancellationToken);
+        }
+        else
+        {
+            return query.Where(filter).ExecuteDeleteAsync(cancellationToken);
+        }
+    }
 
     // all
-    public bool All(Expression<Func<TEntity, bool>> filter) => context.Set<TEntity>().All(filter);
-    public Task<bool> AllAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default) => context.Set<TEntity>().AllAsync(filter, cancellationToken);
+    public bool All(Expression<Func<TEntity, bool>> filter)
+    {
+        return context.Set<TEntity>().All(filter);
+    }
+    public Task<bool> AllAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    {
+        return context.Set<TEntity>().AllAsync(filter, cancellationToken);
+    }
 
     // any
-    public bool Any(Expression<Func<TEntity, bool>> filter) => context.Set<TEntity>().Any(filter);
-    public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default) => context.Set<TEntity>().AnyAsync(filter, cancellationToken);
+    public bool Any(Expression<Func<TEntity, bool>> filter)
+    {
+        return context.Set<TEntity>().Any(filter);
+    }
+    public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
+    {
+        return context.Set<TEntity>().AnyAsync(filter, cancellationToken);
+    }
 
     // max
-    public TResult? Max<TResult>(Expression<Func<TEntity, TResult>> filter) => context.Set<TEntity>().Max(filter);
-    public Task<TResult> MaxAsync<TResult>(Expression<Func<TEntity, TResult>> filter, CancellationToken cancellationToken = default) => context.Set<TEntity>().MaxAsync(filter, cancellationToken);
+    public TResult? Max<TResult>(Expression<Func<TEntity, TResult>> filter)
+    {
+        return context.Set<TEntity>().Max(filter);
+    }
+    public Task<TResult> MaxAsync<TResult>(Expression<Func<TEntity, TResult>> filter, CancellationToken cancellationToken = default)
+    {
+        return context.Set<TEntity>().MaxAsync(filter, cancellationToken);
+    }
     public TEntity? MaxBy<TResult>(Func<TEntity, TResult> keyselect, Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
-        => Filter(filter, asNoTracking).MaxBy(keyselect);
+    {
+        return Filter(filter, asNoTracking).MaxBy(keyselect);
+    }
 
     // min
-    public TResult? Min<TResult>(Expression<Func<TEntity, TResult>> filter) => context.Set<TEntity>().Min(filter);
-    public Task<TResult> MinAsync<TResult>(Expression<Func<TEntity, TResult>> filter, CancellationToken cancellationToken = default) => context.Set<TEntity>().MinAsync(filter, cancellationToken);
+    public TResult? Min<TResult>(Expression<Func<TEntity, TResult>> filter)
+    {
+        return context.Set<TEntity>().Min(filter);
+    }
+    public Task<TResult> MinAsync<TResult>(Expression<Func<TEntity, TResult>> filter, CancellationToken cancellationToken = default)
+    {
+        return context.Set<TEntity>().MinAsync(filter, cancellationToken);
+    }
     public TEntity? MinBy<TResult>(Func<TEntity, TResult> keyselect, Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
-        => Filter(filter, asNoTracking).MinBy(keyselect);
+    {
+        return Filter(filter, asNoTracking).MinBy(keyselect);
+    }
 
     public IQueryable<TEntity> AsQueryable(bool? asNoTracking = false)
     {
@@ -682,21 +805,55 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) : IEnti
         return asNoTracking == true ? query.AsNoTracking() : query;
     }
 
-    private IEnumerable<TEntity> Take(int count, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
-        => Sort(filter, sort, asNoTracking).Take(count);
-    private IEnumerable<TResult> Select<TResult>(Func<TEntity, TResult> select, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
-        => Sort(filter, sort, asNoTracking).Select(select);
-    private IEnumerable<TEntity> DistincBy<TResult>(Func<TEntity, TResult> distinc, Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
-        => Sort(filter, sort, asNoTracking).GroupBy(distinc).Select(x => x.First());
-    private IQueryable<TEntity> Sort(Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
+    private IEnumerable<TEntity> Take(int count, Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
+    {
+        return Sort(filter, sort, asNoTracking).Take(count);
+    }
+    private IEnumerable<TResult> Select<TResult>(Func<TEntity, TResult> select,
+        Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
+    {
+        return Sort(filter, sort, asNoTracking).Select(select);
+    }
+    private IEnumerable<TEntity> DistincBy<TResult>(Func<TEntity, TResult> distinc,
+        Expression<Func<TEntity, bool>>? filter = null, EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
+    {
+        return Sort(filter, sort, asNoTracking).GroupBy(distinc).Select(x => x.First());
+    }
+    private IQueryable<TEntity> Sort(Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null, bool? asNoTracking = false)
     {
         IQueryable<TEntity> query = Filter(filter, asNoTracking);
-        return sort != null ? sort.SortType == SortOrder.Ascending ? query.OrderBy(sort.Sort) : query.OrderByDescending(sort.Sort) : query;
+        if (sort == null)
+        {
+            return query;
+        }
+
+        if (sort.SortType == SortOrder.Ascending)
+        {
+            return query.OrderBy(sort.Sort);
+        }
+        else
+        {
+            return query.OrderByDescending(sort.Sort);
+        }
     }
     private IQueryable<TEntity> Filter(Expression<Func<TEntity, bool>>? filter = null, bool? asNoTracking = false)
     {
-        IQueryable<TEntity> query = asNoTracking is true ? context.Set<TEntity>().AsNoTracking() : context.Set<TEntity>();
-        return filter != null ? query.Where(filter) : query;
+        IQueryable<TEntity> query = context.Set<TEntity>();
+        if (asNoTracking == true)
+        {
+            query = query.AsNoTracking();
+        }
+
+        if (filter == null)
+        {
+            return query;
+        }
+        else
+        {
+            return query.Where(filter);
+        }
     }
 }
 
