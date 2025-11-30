@@ -99,7 +99,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get select
-    public TResult? GetSelect<TResult>(
+    public TResult? Select<TResult>(
         Expression<Func<TEntity, TResult>> select, // 👈 Yeni Projeksiyon Parametresi
         Expression<Func<TEntity, bool>> filter,
         EntitySortModel<TEntity>? sort = null,
@@ -107,6 +107,18 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
+        return selectedQuery.FirstOrDefault();
+    }
+
+    // select as
+    public TResult? SelectAs<TResult>(
+        Expression<Func<TEntity, bool>> filter,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
         return selectedQuery.FirstOrDefault();
     }
 
@@ -130,15 +142,29 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get async select
-    public Task<TResult?> GetSelectAsync<TResult>(
+    public Task<TResult?> SelectAsync<TResult>(
         Expression<Func<TEntity, TResult>> select, // 👈 Yeni Projeksiyon Parametresi
         Expression<Func<TEntity, bool>> filter,
         EntitySortModel<TEntity>? sort = null,
-        bool? asNoTracking = false) // Projeksiyon tipinin referans tip olmasını varsayalım
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default) // Projeksiyon tipinin referans tip olmasını varsayalım
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
-        return selectedQuery.FirstOrDefaultAsync();
+        return selectedQuery.FirstOrDefaultAsync(cancellationToken);
+    }
+
+    // select as async
+    public Task<TResult?> SelectAsAsync<TResult>(
+        Expression<Func<TEntity, bool>> filter,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
+        return selectedQuery.FirstOrDefaultAsync(cancellationToken);
     }
 
     // get all
@@ -160,7 +186,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get select all
-    public List<TResult> GetSelectAll<TResult>(
+    public List<TResult> SelectAll<TResult>(
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
@@ -168,6 +194,18 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
+        return [.. selectedQuery];
+    }
+
+    // select as all
+    public List<TResult> SelectAsAll<TResult>(
+        Expression<Func<TEntity, bool>> filter,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
         return [.. selectedQuery];
     }
 
@@ -191,17 +229,30 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get async select all
-    public Task<List<TResult>> GetSelectAllAsync<TResult>(
+    public Task<List<TResult>> SelectAllAsync<TResult>(
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
-        bool? asNoTracking = false)
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
-        return selectedQuery.ToListAsync();
+        return selectedQuery.ToListAsync(cancellationToken);
     }
 
+    // select as all async
+    public Task<List<TResult>> SelectAsAllAsync<TResult>(
+        Expression<Func<TEntity, bool>> filter,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
+        return selectedQuery.ToListAsync(cancellationToken);
+    }
 
     // get array
     public TEntity[] GetArray(
@@ -222,7 +273,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get select array
-    public TResult[] GetSelectArray<TResult>(
+    public TResult[] SelectArray<TResult>(
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
@@ -253,7 +304,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // get async select all
-    public Task<TResult[]> GetSelectArrayAsync<TResult>(
+    public Task<TResult[]> SelectArrayAsync<TResult>(
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
@@ -465,7 +516,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             .Max(selector);
     }
     public Task<TResult> MaxAsync<TResult>(
-        Expression<Func<TEntity, TResult>> selector, 
+        Expression<Func<TEntity, TResult>> selector,
         CancellationToken cancellationToken = default)
     {
         return context.Set<TEntity>()
@@ -473,8 +524,8 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             .MaxAsync(selector, cancellationToken);
     }
     public TEntity? MaxBy<TResult>(
-        Func<TEntity, TResult> keySelector, 
-        Expression<Func<TEntity, bool>>? filter = null, 
+        Func<TEntity, TResult> keySelector,
+        Expression<Func<TEntity, bool>>? filter = null,
         bool? asNoTracking = false)
     {
         return Filter(filter, asNoTracking).MaxBy(keySelector);
@@ -488,7 +539,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             .Min(filter);
     }
     public Task<TResult> MinAsync<TResult>(
-        Expression<Func<TEntity, TResult>> selector, 
+        Expression<Func<TEntity, TResult>> selector,
         CancellationToken cancellationToken = default)
     {
         return context.Set<TEntity>()
@@ -496,8 +547,8 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             .MinAsync(selector, cancellationToken);
     }
     public TEntity? MinBy<TResult>(
-        Func<TEntity, TResult> keySelector, 
-        Expression<Func<TEntity, bool>>? filter = null, 
+        Func<TEntity, TResult> keySelector,
+        Expression<Func<TEntity, bool>>? filter = null,
         bool? asNoTracking = false)
     {
         return Filter(filter, asNoTracking).MinBy(keySelector);

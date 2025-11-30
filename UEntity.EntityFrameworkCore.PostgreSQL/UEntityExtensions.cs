@@ -79,6 +79,37 @@ public static class UEntityExtensions
         return Expression.Lambda<Func<T, bool>>(combinedBody, parameter);
     }
 
+    public static IQueryable<TDestination> SelectAs<TSource, TDestination>(
+        this IQueryable<TSource> query)
+        where TDestination : new()
+    {
+        Type sourceType = typeof(TSource);
+        Type destinationType = typeof(TDestination);
+
+        ParameterExpression parameter = Expression.Parameter(sourceType, "x");
+        List<MemberBinding> bindings = [];
+
+        foreach (var destProp in destinationType.GetProperties())
+        {
+            // Aynı isimde property var mı?
+            var sourceProp = sourceType.GetProperty(destProp.Name);
+            if (sourceProp == null) continue;
+
+            // x.{Property}
+            var sourceValue = Expression.Property(parameter, sourceProp);
+
+            // {Property} = x.{Property}
+            var binding = Expression.Bind(destProp, sourceValue);
+
+            bindings.Add(binding);
+        }
+
+        var body = Expression.MemberInit(Expression.New(destinationType), bindings);
+        var selector = Expression.Lambda<Func<TSource, TDestination>>(body, parameter);
+
+        return query.Select(selector);
+    }
+
     public static Paginate<TDestination> ConvertItems<TSource, TDestination>(this Paginate<TSource> source, List<TDestination> items)
     {
         return new Paginate<TDestination>

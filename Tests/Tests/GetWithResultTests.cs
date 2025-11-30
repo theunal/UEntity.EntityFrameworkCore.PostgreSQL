@@ -15,7 +15,7 @@ public class GetWithResultTests
         string expectedName = "ProductName1";
 
         // Act
-        var result = _productDal.GetSelect<object>(e => e.Name, e => e.Id == expectedId);
+        var result = _productDal.Select<object>(e => e.Name, e => e.Id == expectedId);
 
         // Assert
         Assert.That(result, Is.Not.Null);
@@ -29,7 +29,7 @@ public class GetWithResultTests
         int invalidId = 1000;
 
         // Act
-        var result = _productDal.GetSelect<object>(e => e.Name, e => e.Id == invalidId);
+        var result = _productDal.Select<object>(e => e.Name, e => e.Id == invalidId);
 
         // Assert
         Assert.That(result, Is.Null);

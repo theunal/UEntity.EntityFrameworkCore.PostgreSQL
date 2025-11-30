@@ -16,12 +16,12 @@ public class AddTests
     public void AddRange_ValidEntities_AddsEntitiesToDatabase()
     {
 
-        var model = _productDal.GetSelect<Model>( x => new Model
+        var model = _productDal.Select<Model>( x => new Model
         {
             Name = x.Name
         }, x => x.Id == 5);
 
-        var models = _productDal.GetSelectAll<Model>(x => new Model
+        var models = _productDal.SelectAll<Model>(x => new Model
         {
             Name = x.Name
         }, x => x.Name.Contains(""));
