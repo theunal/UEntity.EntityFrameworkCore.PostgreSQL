@@ -69,9 +69,9 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="asNoTracking">Whether to track the entity or not.</param>
     /// <returns>The entity that matches the filter, or null if no entity is found.</returns>
     T? Get(
-        Expression<Func<T, bool>> filter, 
-        EntitySortModel<T>? sort = null, 
-        bool? asNoTracking = false, 
+        Expression<Func<T, bool>> filter,
+        EntitySortModel<T>? sort = null,
+        bool? asNoTracking = false,
         params Expression<Func<T, object?>>[]? includes);
 
     /// <summary>
@@ -102,9 +102,9 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="asNoTracking">Whether to track the entity or not.</param>
     /// <returns>A task that represents the asynchronous operation, containing the entity that matches the filter, or null if no entity is found.</returns>
     Task<T?> GetAsync(
-        Expression<Func<T, bool>> filter, 
-        EntitySortModel<T>? sort = null, 
-        bool? asNoTracking = false, 
+        Expression<Func<T, bool>> filter,
+        EntitySortModel<T>? sort = null,
+        bool? asNoTracking = false,
         CancellationToken cancellationToken = default,
         params Expression<Func<T, object?>>[]? includes);
 
@@ -130,7 +130,7 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
             bool? asNoTracking = false,
             CancellationToken cancellationToken = default)
             where TResult : new();
-    
+
     /// <summary>
     /// Retrieves all entities that match the specified filter, with optional sorting and tracking behavior.
     /// </summary>
@@ -138,11 +138,11 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="sort">The sorting model.</param>
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
     /// <returns>A list of entities that match the filter.</returns>
-        List<T> GetAll(
-        Expression<Func<T, bool>>? filter = null, 
-        EntitySortModel<T>? sort = null, 
-        bool? asNoTracking = false,
-        params Expression<Func<T, object?>>[]? includes);
+    List<T> GetAll(
+    Expression<Func<T, bool>>? filter = null,
+    EntitySortModel<T>? sort = null,
+    bool? asNoTracking = false,
+    params Expression<Func<T, object?>>[]? includes);
 
     List<TResult> SelectAll<TResult>(
             Expression<Func<T, TResult>> select,
@@ -150,12 +150,26 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
             EntitySortModel<T>? sort = null,
             bool? asNoTracking = false);
 
+    Paginate<TResult> SelectPaginate<TResult>(
+            int page, int size,
+            Expression<Func<T, TResult>> select,
+            Expression<Func<T, bool>>? filter = null,
+            EntitySortModel<T>? sort = null,
+            bool? asNoTracking = false);
+
     List<TResult> SelectAsAll<TResult>(
-            Expression<Func<T, bool>> filter,
+            Expression<Func<T, bool>>? filter = null,
             EntitySortModel<T>? sort = null,
             bool? asNoTracking = false)
             where TResult : new();
-    
+
+    Paginate<TResult> SelectAsPaginate<TResult>(
+            int page, int size,
+            Expression<Func<T, bool>>? filter = null,
+            EntitySortModel<T>? sort = null,
+            bool? asNoTracking = false)
+            where TResult : new();
+
     /// <summary>
     /// Asynchronously retrieves all entities that match the specified filter, with optional sorting and tracking behavior.
     /// </summary>
@@ -163,12 +177,12 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="sort">The sorting model.</param>
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
     /// <returns>A task that represents the asynchronous operation, containing a list of entities that match the filter.</returns>
-        Task<List<T>> GetAllAsync(
-        Expression<Func<T, bool>>? filter = null, 
-        EntitySortModel<T>? sort = null, 
-        bool? asNoTracking = false,
-        CancellationToken cancellationToken = default, 
-        params Expression<Func<T, object?>>[]? includes);
+    Task<List<T>> GetAllAsync(
+            Expression<Func<T, bool>>? filter = null,
+            EntitySortModel<T>? sort = null,
+            bool? asNoTracking = false,
+            CancellationToken cancellationToken = default,
+            params Expression<Func<T, object?>>[]? includes);
 
     Task<List<TResult>> SelectAllAsync<TResult>(
             Expression<Func<T, TResult>> select,
@@ -177,11 +191,25 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
             bool? asNoTracking = false,
             CancellationToken cancellationToken = default);
 
+    Task<Paginate<TResult>> SelectPaginateAsync<TResult>(
+            int page, int size,
+            Expression<Func<T, TResult>> select,
+            Expression<Func<T, bool>>? filter = null,
+            EntitySortModel<T>? sort = null,
+            bool? asNoTracking = false);
+
     Task<List<TResult>> SelectAsAllAsync<TResult>(
-            Expression<Func<T, bool>> filter,
+            Expression<Func<T, bool>>? filter = null,
             EntitySortModel<T>? sort = null,
             bool? asNoTracking = false,
             CancellationToken cancellationToken = default)
+            where TResult : new();
+
+    Task<Paginate<TResult>> SelectAsPaginateAsync<TResult>(
+            int page, int size,
+            Expression<Func<T, bool>>? filter = null,
+            EntitySortModel<T>? sort = null,
+            bool? asNoTracking = false)
             where TResult : new();
 
     // ARRAY

@@ -198,9 +198,22 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         return [.. selectedQuery];
     }
 
+    // select paginate
+    public Paginate<TResult> SelectPaginate<TResult>(
+        int page, int size,
+        Expression<Func<TEntity, TResult>> select,
+        Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.Select(select);
+        return selectedQuery.ToPaginate(page, size);
+    }
+
     // select as all
     public List<TResult> SelectAsAll<TResult>(
-        Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false)
         where TResult : new()
@@ -208,6 +221,19 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
         return [.. selectedQuery];
+    }
+
+    // select as paginate
+    public Paginate<TResult> SelectAsPaginate<TResult>(
+        int page, int size,
+        Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
+        return selectedQuery.ToPaginate(page, size);
     }
 
     // get all async
@@ -242,9 +268,22 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         return selectedQuery.ToListAsync(cancellationToken);
     }
 
+    // select paginate
+    public Task<Paginate<TResult>> SelectPaginateAsync<TResult>(
+        int page, int size,
+        Expression<Func<TEntity, TResult>> select,
+        Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.Select(select);
+        return selectedQuery.ToPaginateAsync(page, size);
+    }
+
     // select as all async
     public Task<List<TResult>> SelectAsAllAsync<TResult>(
-        Expression<Func<TEntity, bool>> filter,
+        Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
         CancellationToken cancellationToken = default)
@@ -253,6 +292,19 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
         return selectedQuery.ToListAsync(cancellationToken);
+    }
+
+    // select as paginate async
+    public Task<Paginate<TResult>> SelectAsPaginateAsync<TResult>(
+        int page, int size,
+        Expression<Func<TEntity, bool>>? filter = null,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+        where TResult : new()
+    {
+        IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
+        IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
+        return selectedQuery.ToPaginateAsync(page, size);
     }
 
     // get array
