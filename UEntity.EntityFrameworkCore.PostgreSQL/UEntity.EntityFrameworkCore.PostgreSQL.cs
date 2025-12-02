@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Query;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System.Linq.Expressions;
+using System.Threading;
 
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
@@ -354,13 +355,13 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     // add
     public int Add(TEntity entity)
     {
-        context.Entry(entity).State = EntityState.Added;
+        context.Set<TEntity>().Add(entity);
         return context.SaveChanges();
     }
-    public Task<int> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public async Task<int> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        context.Entry(entity).State = EntityState.Added;
-        return context.SaveChangesAsync(cancellationToken);
+        await context.Set<TEntity>().AddAsync(entity, cancellationToken);
+        return await context.SaveChangesAsync(cancellationToken);
     }
 
     // add range
@@ -378,12 +379,12 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     // update
     public int Update(TEntity entity)
     {
-        context.Entry(entity).State = EntityState.Modified;
+        context.Set<TEntity>().Update(entity);
         return context.SaveChanges();
     }
     public Task<int> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        context.Entry(entity).State = EntityState.Modified;
+        context.Set<TEntity>().Update(entity);
         return context.SaveChangesAsync(cancellationToken);
     }
 
@@ -433,12 +434,12 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     // delete
     public int Delete(TEntity entity)
     {
-        context.Entry(entity).State = EntityState.Deleted;
+        context.Set<TEntity>().Remove(entity);
         return context.SaveChanges();
     }
     public Task<int> DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
     {
-        context.Entry(entity).State = EntityState.Deleted;
+        context.Set<TEntity>().Remove(entity);
         return context.SaveChangesAsync(cancellationToken);
     }
 
