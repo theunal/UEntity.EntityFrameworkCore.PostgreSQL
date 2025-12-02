@@ -2,13 +2,20 @@
 using Microsoft.EntityFrameworkCore.Query;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using System.Linq.Expressions;
-using System.Threading;
 
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
 public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     IEntityRepository<TEntity> where TEntity : class, IEntity, new() where TContext : DbContext, new()
 {
+    public IQueryable<TEntity> Query(
+        Expression<Func<TEntity, bool>> filter,
+        EntitySortModel<TEntity>? sort = null,
+        bool? asNoTracking = false)
+    {
+        return Sort(filter, sort, asNoTracking);
+    }
+
     // count
     public int Count(Expression<Func<TEntity, bool>>? filter = null)
     {

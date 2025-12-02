@@ -12,7 +12,7 @@
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>postresql generic repository</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<Version>9.0.4.6</Version>
+		<Version>9.0.4.7</Version>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 	</PropertyGroup>
 

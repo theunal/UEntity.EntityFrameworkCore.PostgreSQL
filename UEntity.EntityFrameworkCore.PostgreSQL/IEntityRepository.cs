@@ -9,6 +9,11 @@ namespace UEntity.EntityFrameworkCore.PostgreSQL;
 /// <typeparam name="T">The type of the entity.</typeparam>
 public interface IEntityRepository<T> where T : class, IEntity, new()
 {
+    IQueryable<T> Query(
+        Expression<Func<T, bool>> filter,
+        EntitySortModel<T>? sort = null,
+        bool? asNoTracking = false);
+
     /// <summary>
     /// Counts the number of entities that match the specified filter.
     /// </summary>
