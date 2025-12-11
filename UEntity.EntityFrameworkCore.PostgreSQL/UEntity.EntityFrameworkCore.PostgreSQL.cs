@@ -93,6 +93,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>> filter,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -101,6 +102,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return query.FirstOrDefault();
@@ -135,6 +141,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>> filter,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
@@ -144,6 +151,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return query.FirstOrDefaultAsync(cancellationToken);
@@ -180,6 +192,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -188,6 +201,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return [.. query];
@@ -248,6 +266,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
@@ -257,6 +276,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return query.ToListAsync(cancellationToken);
@@ -319,6 +343,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -327,6 +352,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return [.. query];
@@ -349,6 +379,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
@@ -358,6 +389,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return query.ToArrayAsync(cancellationToken);
@@ -381,6 +417,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -390,6 +427,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             {
                 query = query.Include(include);
             }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
+            }
         }
         return query.ToPaginate(page, size);
     }
@@ -398,6 +440,7 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
         bool? asNoTracking = false,
+        bool? asSplitQuery = false,
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
@@ -406,6 +449,11 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
             foreach (var include in includes)
             {
                 query = query.Include(include);
+            }
+
+            if (asSplitQuery == true && includes.Length > 1)
+            {
+                query = query.AsSplitQuery();
             }
         }
         return query.ToPaginateAsync(page, size);

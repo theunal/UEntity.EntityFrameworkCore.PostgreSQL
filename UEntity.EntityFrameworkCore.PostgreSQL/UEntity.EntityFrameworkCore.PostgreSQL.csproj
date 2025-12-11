@@ -12,8 +12,9 @@
 		<PackageIcon>logo.png</PackageIcon>
 		<PackageTags>postresql generic repository</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<Version>9.0.4.7</Version>
+		<Version>9.0.4.8</Version>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
+		<LicenseExpression>Apache-2.0</LicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
