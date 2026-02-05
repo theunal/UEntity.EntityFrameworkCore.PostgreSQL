@@ -510,32 +510,18 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     // execute update
     public int ExecuteUpdate(
         Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
-        Expression<Func<TEntity, bool>>? filter = null)
+        Expression<Func<TEntity, bool>> filter)
     {
         IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.ExecuteUpdate(setPropertyCalls);
-        }
-        else
-        {
-            return query.Where(filter).ExecuteUpdate(setPropertyCalls);
-        }
+        return query.Where(filter).ExecuteUpdate(setPropertyCalls);
     }
     public Task<int> ExecuteUpdateAsync(
         Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
-        Expression<Func<TEntity, bool>>? filter = null,
+        Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            return query.Where(filter).ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
-        }
+        return query.Where(filter).ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
     }
 
     // delete
@@ -563,29 +549,15 @@ public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
     }
 
     // execute delete
-    public int ExecuteDelete(Expression<Func<TEntity, bool>>? filter = null)
+    public int ExecuteDelete(Expression<Func<TEntity, bool>> filter)
     {
         IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.ExecuteDelete();
-        }
-        else
-        {
-            return query.Where(filter).ExecuteDelete();
-        }
+        return query.Where(filter).ExecuteDelete();
     }
-    public Task<int> ExecuteDeleteAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default)
+    public Task<int> ExecuteDeleteAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.ExecuteDeleteAsync(cancellationToken);
-        }
-        else
-        {
-            return query.Where(filter).ExecuteDeleteAsync(cancellationToken);
-        }
+        return query.Where(filter).ExecuteDeleteAsync(cancellationToken);
     }
 
     // all

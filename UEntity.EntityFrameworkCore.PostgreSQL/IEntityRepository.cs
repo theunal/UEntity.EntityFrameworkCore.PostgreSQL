@@ -345,7 +345,7 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="setPropertyCalls">The expression specifying the update.</param>
     /// <param name="filter">The filter expression.</param>
     /// <returns>The number of affected entities.</returns>
-    int ExecuteUpdate(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>>? filter = null);
+    int ExecuteUpdate(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>> filter);
 
     /// <summary>
     /// Asynchronously executes an update operation on entities that match the specified filter.
@@ -354,7 +354,7 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous update operation, containing the number of affected entities.</returns>
     Task<int> ExecuteUpdateAsync(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
-        Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
+        Expression<Func<T, bool>> filter , CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the specified entity from the repository.
@@ -387,14 +387,14 @@ public interface IEntityRepository<T> where T : class, IEntity, new()
     /// </summary>
     /// <param name="filter">The filter expression.</param>
     /// <returns>The number of affected entities.</returns>
-    int ExecuteDelete(Expression<Func<T, bool>>? filter = null);
+    int ExecuteDelete(Expression<Func<T, bool>> filter);
 
     /// <summary>
     /// Asynchronously executes a delete operation on entities that match the specified filter.
     /// </summary>
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous delete operation, containing the number of affected entities.</returns>
-    Task<int> ExecuteDeleteAsync(Expression<Func<T, bool>>? filter = null, CancellationToken cancellationToken = default);
+    Task<int> ExecuteDeleteAsync(Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Determines whether all entities match the specified filter.
