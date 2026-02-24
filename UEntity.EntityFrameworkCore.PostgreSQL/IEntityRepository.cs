@@ -7,7 +7,7 @@ namespace UEntity.EntityFrameworkCore.PostgreSQL;
 /// Defines a repository interface for entities of type T.
 /// </summary>
 /// <typeparam name="T">The type of the entity.</typeparam>
-public interface IEntityRepository<T> where T : class, IEntity, new()
+public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity, new()
 {
     IQueryable<T> Query(
         Expression<Func<T, bool>> filter,

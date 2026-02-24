@@ -3,9 +3,6 @@ using System.Linq.Expressions;
 
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
-// main entity interface
-public interface IEntity { }
-
 public record EntitySortModel<T>
 {
     public Expression<Func<T, object?>> Sort { get; set; } = null!;

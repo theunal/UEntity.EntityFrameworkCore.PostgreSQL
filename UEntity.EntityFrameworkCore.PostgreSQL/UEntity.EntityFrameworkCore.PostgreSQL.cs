@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
-public class EfEntityRepositoryBase<TEntity, TContext>(TContext context) :
-    IEntityRepository<TEntity> where TEntity : class, IEntity, new() where TContext : DbContext, new()
+public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext context) :
+    IEntityRepository<TEntity, IBaseEntity> where TEntity : class, IBaseEntity, new() where TContext : DbContext, new()
 {
     public IQueryable<TEntity> Query(
         Expression<Func<TEntity, bool>> filter,

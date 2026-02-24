@@ -9,12 +9,12 @@ public class TestEntity : IEntity
     public string Name { get; set; } = null!;
 }
 
-public interface ITestEntityDal : IEntityRepository<TestEntity>
+public interface ITestEntityDal : IEntityRepository<TestEntity, IEntity>
 {
 
 }
 
-public class TestEntityDal(TestDbContext context) : EfEntityRepositoryBase<TestEntity, TestDbContext>(context), ITestEntityDal
+public class TestEntityDal(TestDbContext context) : EfEntityRepositoryBase<TestEntity, TestDbContext, IEntity>(context), ITestEntityDal
 {
 
 }

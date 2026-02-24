@@ -3,18 +3,20 @@ using UEntity.EntityFrameworkCore.PostgreSQL;
 
 namespace Tests.Entities;
 
+public interface IEntity { }
+
 public class Product : IEntity
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
 }
 
-public interface IProductDal : IEntityRepository<Product>
+public interface IProductDal : IEntityRepository<Product, IEntity>
 {
 
 }
 
-public class ProductDal(TestDbContext context) : EfEntityRepositoryBase<Product, TestDbContext>(context), IProductDal
+public class ProductDal(TestDbContext context) : EfEntityRepositoryBase<Product, TestDbContext, IEntity>(context), IProductDal
 {
 
 }
