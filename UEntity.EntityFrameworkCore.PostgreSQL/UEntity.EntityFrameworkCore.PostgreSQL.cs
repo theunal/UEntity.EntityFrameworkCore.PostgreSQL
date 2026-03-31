@@ -509,14 +509,16 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
 
     // execute update
     public int ExecuteUpdate(
-        Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
+        //Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
+        Action<UpdateSettersBuilder<TEntity>> setPropertyCalls,
         Expression<Func<TEntity, bool>> filter)
     {
         IQueryable<TEntity> query = context.Set<TEntity>();
         return query.Where(filter).ExecuteUpdate(setPropertyCalls);
     }
     public Task<int> ExecuteUpdateAsync(
-        Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
+        //Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
+        Action<UpdateSettersBuilder<TEntity>> setPropertyCalls,
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken = default)
     {

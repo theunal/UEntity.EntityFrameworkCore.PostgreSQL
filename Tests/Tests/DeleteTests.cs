@@ -1,9 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Tests.Entities;
+﻿using Tests.Entities;
 
 namespace Tests.Tests;
 

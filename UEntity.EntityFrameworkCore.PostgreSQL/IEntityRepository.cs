@@ -263,9 +263,9 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
     /// <returns>A paginated list of entities that match the filter.</returns>
     Paginate<T> GetListPaginate(
-        int page, int size, 
-        Expression<Func<T, bool>>? filter = null, 
-        EntitySortModel<T>? sort = null, 
+        int page, int size,
+        Expression<Func<T, bool>>? filter = null,
+        EntitySortModel<T>? sort = null,
         bool? asNoTracking = false,
         bool? asSplitQuery = false,
         params Expression<Func<T, object?>>[]? includes);
@@ -280,9 +280,9 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <param name="asNoTracking">Whether to track the entities or not.</param>
     /// <returns>A task that represents the asynchronous operation, containing a paginated list of entities that match the filter.</returns>
     Task<Paginate<T>> GetListPaginateAsync(
-        int page, int size, 
-        Expression<Func<T, bool>>? filter = null, 
-        EntitySortModel<T>? sort = null, 
+        int page, int size,
+        Expression<Func<T, bool>>? filter = null,
+        EntitySortModel<T>? sort = null,
         bool? asNoTracking = false,
         bool? asSplitQuery = false,
         params Expression<Func<T, object?>>[]? includes);
@@ -345,7 +345,8 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <param name="setPropertyCalls">The expression specifying the update.</param>
     /// <param name="filter">The filter expression.</param>
     /// <returns>The number of affected entities.</returns>
-    int ExecuteUpdate(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>> filter);
+    //int ExecuteUpdate(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls, Expression<Func<T, bool>> filter);
+    int ExecuteUpdate(Action<UpdateSettersBuilder<T>> setPropertyCalls, Expression<Func<T, bool>> filter);
 
     /// <summary>
     /// Asynchronously executes an update operation on entities that match the specified filter.
@@ -353,8 +354,10 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <param name="setPropertyCalls">The expression specifying the update.</param>
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous update operation, containing the number of affected entities.</returns>
-    Task<int> ExecuteUpdateAsync(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
-        Expression<Func<T, bool>> filter , CancellationToken cancellationToken = default);
+    //Task<int> ExecuteUpdateAsync(Expression<Func<SetPropertyCalls<T>, SetPropertyCalls<T>>> setPropertyCalls,
+    //    Expression<Func<T, bool>> filter , CancellationToken cancellationToken = default);
+    Task<int> ExecuteUpdateAsync(Action<UpdateSettersBuilder<T>> setPropertyCalls,
+        Expression<Func<T, bool>> filter, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes the specified entity from the repository.
