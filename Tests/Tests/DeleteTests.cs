@@ -2,7 +2,7 @@
 
 namespace Tests.Tests;
 
-[TestFixture]
+[TestFixture, NonParallelizable]
 public class DeleteTests
 {
     private IProductDal _productDal = new ProductDal(SetupDbContext.DbContext);

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace UEntity.EntityFrameworkCore.PostgreSQL;
 
 public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext context) :
-    IEntityRepository<TEntity, IBaseEntity> where TEntity : class, IBaseEntity, new() where TContext : DbContext, new()
+    IEntityRepository<TEntity, IBaseEntity> where TEntity : class, IBaseEntity, new() where TContext : DbContext
 {
     public IQueryable<TEntity> Query(
         Expression<Func<TEntity, bool>> filter,
@@ -19,73 +19,33 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
     // count
     public int Count(Expression<Func<TEntity, bool>>? filter = null)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.AsNoTracking().Count();
-        }
-        else
-        {
-            return query.AsNoTracking().Where(filter).Count();
-        }
+        return Filter(filter, true).Count();
     }
     public Task<int> CountAsync(Expression<Func<TEntity, bool>>? filter = null, CancellationToken cancellationToken = default)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (filter == null)
-        {
-            return query.AsNoTracking().CountAsync(cancellationToken);
-        }
-        else
-        {
-            return query.AsNoTracking().Where(filter).CountAsync(cancellationToken);
-        }
+        return Filter(filter, true).CountAsync(cancellationToken);
     }
 
     // first 
     public TEntity? FirstOrDefault(Expression<Func<TEntity, object>> sort, bool? asNoTracking = false)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (asNoTracking == true)
-        {
-            query = query.AsNoTracking();
-        }
-
-        return query.OrderBy(sort).FirstOrDefault();
+        return Filter(null, asNoTracking).OrderBy(sort).FirstOrDefault();
     }
     public Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, object>> sort,
         CancellationToken cancellationToken = default, bool? asNoTracking = false)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (asNoTracking == true)
-        {
-            query = query.AsNoTracking();
-        }
-
-        return query.OrderBy(sort).FirstOrDefaultAsync(cancellationToken);
+        return Filter(null, asNoTracking).OrderBy(sort).FirstOrDefaultAsync(cancellationToken);
     }
 
     // last
     public TEntity? LastOrDefault(Expression<Func<TEntity, object>> sort, bool? asNoTracking = false)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (asNoTracking == true)
-        {
-            query = query.AsNoTracking();
-        }
-
-        return query.OrderByDescending(sort).FirstOrDefault();
+        return Filter(null, asNoTracking).OrderByDescending(sort).FirstOrDefault();
     }
     public Task<TEntity?> LastOrDefaultAsync(Expression<Func<TEntity, object>> sort,
         CancellationToken cancellationToken = default, bool? asNoTracking = false)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        if (asNoTracking == true)
-        {
-            query = query.AsNoTracking();
-        }
-
-        return query.OrderByDescending(sort).FirstOrDefaultAsync(cancellationToken);
+        return Filter(null, asNoTracking).OrderByDescending(sort).FirstOrDefaultAsync(cancellationToken);
     }
 
     // get
@@ -97,18 +57,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.FirstOrDefault();
     }
 
@@ -146,18 +95,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.FirstOrDefaultAsync(cancellationToken);
     }
 
@@ -196,18 +134,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return [.. query];
     }
 
@@ -271,18 +198,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.ToListAsync(cancellationToken);
     }
 
@@ -305,11 +221,12 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
-        bool? asNoTracking = false)
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
-        return selectedQuery.ToPaginateAsync(page, size);
+        return selectedQuery.ToPaginateAsync(page, size, cancellationToken);
     }
 
     // select as all async
@@ -330,12 +247,13 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         int page, int size,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
-        bool? asNoTracking = false)
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
         where TResult : new()
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.SelectAs<TEntity, TResult>();
-        return selectedQuery.ToPaginateAsync(page, size);
+        return selectedQuery.ToPaginateAsync(page, size, cancellationToken);
     }
 
     // get array
@@ -347,18 +265,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return [.. query];
     }
 
@@ -384,18 +291,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.ToArrayAsync(cancellationToken);
     }
 
@@ -404,11 +300,12 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         Expression<Func<TEntity, TResult>> select,
         Expression<Func<TEntity, bool>>? filter = null,
         EntitySortModel<TEntity>? sort = null,
-        bool? asNoTracking = false)
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
         IQueryable<TResult> selectedQuery = query.Select(select);
-        return selectedQuery.ToArrayAsync();
+        return selectedQuery.ToArrayAsync(cancellationToken);
     }
 
     // paginate
@@ -421,18 +318,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.ToPaginate(page, size);
     }
     public Task<Paginate<TEntity>> GetListPaginateAsync(
@@ -444,18 +330,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         params Expression<Func<TEntity, object?>>[]? includes)
     {
         IQueryable<TEntity>? query = Sort(filter, sort, asNoTracking);
-        if (includes != null)
-        {
-            foreach (var include in includes)
-            {
-                query = query.Include(include);
-            }
-
-            if (asSplitQuery == true && includes.Length > 1)
-            {
-                query = query.AsSplitQuery();
-            }
-        }
+        query = ApplyIncludes(query, includes, asSplitQuery);
         return query.ToPaginateAsync(page, size);
     }
 
@@ -513,8 +388,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         Action<UpdateSettersBuilder<TEntity>> setPropertyCalls,
         Expression<Func<TEntity, bool>> filter)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        return query.Where(filter).ExecuteUpdate(setPropertyCalls);
+        return Filter(filter, false).ExecuteUpdate(setPropertyCalls);
     }
     public Task<int> ExecuteUpdateAsync(
         //Expression<Func<SetPropertyCalls<TEntity>, SetPropertyCalls<TEntity>>> setPropertyCalls,
@@ -522,8 +396,7 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         Expression<Func<TEntity, bool>> filter,
         CancellationToken cancellationToken = default)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        return query.Where(filter).ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
+        return Filter(filter, false).ExecuteUpdateAsync(setPropertyCalls, cancellationToken: cancellationToken);
     }
 
     // delete
@@ -553,57 +426,58 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
     // execute delete
     public int ExecuteDelete(Expression<Func<TEntity, bool>> filter)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        return query.Where(filter).ExecuteDelete();
+        return Filter(filter, false).ExecuteDelete();
     }
     public Task<int> ExecuteDeleteAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        IQueryable<TEntity> query = context.Set<TEntity>();
-        return query.Where(filter).ExecuteDeleteAsync(cancellationToken);
+        return Filter(filter, false).ExecuteDeleteAsync(cancellationToken);
     }
 
     // all
     public bool All(Expression<Func<TEntity, bool>> filter)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .All(filter);
+        return Filter(null, true).All(filter);
     }
     public Task<bool> AllAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .AllAsync(filter, cancellationToken);
+        return Filter(null, true).AllAsync(filter, cancellationToken);
     }
 
     // any
     public bool Any(Expression<Func<TEntity, bool>> filter)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .Any(filter);
+        return Filter(null, true).Any(filter);
     }
     public Task<bool> AnyAsync(Expression<Func<TEntity, bool>> filter, CancellationToken cancellationToken = default)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .AnyAsync(filter, cancellationToken);
+        return Filter(null, true).AnyAsync(filter, cancellationToken);
     }
 
     // max
     public TResult? Max<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .Max(selector);
+        try
+        {
+            return Filter(null, true).Max(selector);
+        }
+        catch
+        {
+            return default;
+        }
     }
-    public Task<TResult> MaxAsync<TResult>(
+    public async Task<TResult?> MaxAsync<TResult>(
         Expression<Func<TEntity, TResult>> selector,
         CancellationToken cancellationToken = default)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .MaxAsync(selector, cancellationToken);
+        try
+        {
+            return await Filter(null, true)
+                .MaxAsync(selector, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            return default;
+        }
     }
     public TEntity? MaxBy<TResult>(
         Func<TEntity, TResult> keySelector,
@@ -614,19 +488,30 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
     }
 
     // min
-    public TResult? Min<TResult>(Expression<Func<TEntity, TResult>> filter)
+    public TResult? Min<TResult>(Expression<Func<TEntity, TResult>> selector)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .Min(filter);
+        try
+        {
+            return Filter(null, true).Min(selector);
+        }
+        catch
+        {
+            return default;
+        }
     }
-    public Task<TResult> MinAsync<TResult>(
+    public async Task<TResult?> MinAsync<TResult>(
         Expression<Func<TEntity, TResult>> selector,
         CancellationToken cancellationToken = default)
     {
-        return context.Set<TEntity>()
-            .AsNoTracking()
-            .MinAsync(selector, cancellationToken);
+        try
+        {
+            return await Filter(null, true)
+                .MinAsync(selector, cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            return default;
+        }
     }
     public TEntity? MinBy<TResult>(
         Func<TEntity, TResult> keySelector,
@@ -634,6 +519,24 @@ public class EfEntityRepositoryBase<TEntity, TContext, IBaseEntity>(TContext con
         bool? asNoTracking = false)
     {
         return Filter(filter, asNoTracking).MinBy(keySelector);
+    }
+
+    private static IQueryable<TEntity> ApplyIncludes(IQueryable<TEntity> query,
+        Expression<Func<TEntity, object?>>[]? includes, bool? asSplitQuery)
+    {
+        if (includes == null) return query;
+
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+
+        if (asSplitQuery == true && includes.Length > 1)
+        {
+            query = query.AsSplitQuery();
+        }
+
+        return query;
     }
 
     private IQueryable<TEntity> Sort(Expression<Func<TEntity, bool>>? filter = null,

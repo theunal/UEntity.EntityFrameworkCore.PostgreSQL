@@ -205,7 +205,8 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
             Expression<Func<T, TResult>> select,
             Expression<Func<T, bool>>? filter = null,
             EntitySortModel<T>? sort = null,
-            bool? asNoTracking = false);
+            bool? asNoTracking = false,
+            CancellationToken cancellationToken = default);
 
     Task<List<TResult>> SelectAsAllAsync<TResult>(
             Expression<Func<T, bool>>? filter = null,
@@ -218,7 +219,8 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
             int page, int size,
             Expression<Func<T, bool>>? filter = null,
             EntitySortModel<T>? sort = null,
-            bool? asNoTracking = false)
+            bool? asNoTracking = false,
+            CancellationToken cancellationToken = default)
             where TResult : new();
 
     // ARRAY
@@ -250,7 +252,8 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
         Expression<Func<T, TResult>> select,
         Expression<Func<T, bool>>? filter = null,
         EntitySortModel<T>? sort = null,
-        bool? asNoTracking = false);
+        bool? asNoTracking = false,
+        CancellationToken cancellationToken = default);
 
 
     /// <summary>
@@ -444,7 +447,7 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous operation, containing the maximum value.</returns>
     /// 
-    Task<TResult> MaxAsync<TResult>(Expression<Func<T, TResult>> filter, CancellationToken cancellationToken = default);
+    Task<TResult?> MaxAsync<TResult>(Expression<Func<T, TResult>> filter, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves the entity with the maximum value of the specified key selector function.
@@ -470,7 +473,7 @@ public interface IEntityRepository<T, IBaseEntity> where T : class, IBaseEntity,
     /// <typeparam name="TResult">The type of the result.</typeparam>
     /// <param name="filter">The filter expression.</param>
     /// <returns>A task that represents the asynchronous operation, containing the minimum value.</returns>
-    Task<TResult> MinAsync<TResult>(Expression<Func<T, TResult>> filter, CancellationToken cancellationToken = default);
+    Task<TResult?> MinAsync<TResult>(Expression<Func<T, TResult>> filter, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves the entity with the minimum value of the specified key selector function.

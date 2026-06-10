@@ -10,9 +10,9 @@
 		<PackageProjectUrl>https://github.com/theunal/UEntity.EntityFrameworkCore.PostgreSQL</PackageProjectUrl>
 		<Description>This IEntityRepository interface represents a generic entity repository interface. This interface defines standard CRUD (Create, Read, Update, Delete) operations for interacting with entities in a database table and provides various methods for query operations.</Description>
 		<PackageIcon>logo.png</PackageIcon>
-		<PackageTags>postresql generic repository</PackageTags>
+		<PackageTags>postgresql generic repository</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<Version>10.3.0</Version>
+		<Version>10.3.2</Version>
 		<PackageReadmeFile>readme.md</PackageReadmeFile>
 		<LicenseExpression>Apache-2.0</LicenseExpression>
 	</PropertyGroup>
@@ -29,7 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.2" />
 	</ItemGroup>
 
 </Project>

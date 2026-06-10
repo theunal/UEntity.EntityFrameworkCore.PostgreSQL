@@ -2,7 +2,7 @@
 
 namespace Tests.Tests;
 
-[TestFixture]
+[TestFixture, NonParallelizable]
 public class UpdateTests
 {
     private IProductDal _productDal = new ProductDal(SetupDbContext.DbContext);
@@ -28,7 +28,7 @@ public class UpdateTests
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Name, Is.EqualTo("UpdatedProductName1001"));
 
-        _productDal.DeleteAsync(product);
+        _productDal.Delete(product);
     }
 
     [Test]
